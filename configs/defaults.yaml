@@ -4,9 +4,8 @@ defaults:
   - model: simple
   - eval: planning
   - goal_model: horizon
-  
 
-goal_model: 
+goal_model:
   freq: 1
   queue_size: 0
 
@@ -25,21 +24,20 @@ eval:
   goal_ratio: 5
   freq: 1
   fps: 1000
-  env_name: 'Plains'
-  task_name: 'obtain_planks'
-
+  env_name: "Plains"
+  task_name: "obtain_planks"
 
 data:
   skip_frame: 5
   window_len: 10
   padding_pos: left
   per_data_filters: null
-  
+
 model:
   use_horizon: True
   use_extra_obs: True
   use_prev_action: True
-  use_recurrent: 'transformer'
+  use_recurrent: "transformer"
   use_pred_horizon: True
   c: 8
 
@@ -53,16 +51,16 @@ model:
     n_head: 4
     resid_pdrop: 0.1
     attn_pdrop: 0.1
-    activation_function: 'relu'
+    activation_function: "relu"
 
-  model_path: ''
-  weight_path: ''
+  model_path: ""
+  weight_path: ""
 
 pretrains:
-  clip_path: /home/zhwang/workspace/minerl/MC-Planner/checkpoints/attn.pth
+  clip_path: /Users/gautier/Github/minecraft/models/MINECLIP.pth
 
 loss:
-  action_loss: 
+  action_loss:
     fn: action_loss
     weight: 1.0
     enable: True
@@ -82,7 +80,7 @@ optimize:
   weight_decay: 0.0001
   warmup_steps: 10000
   aug_ratio: 10000
-  
+
 record:
   ckpt_freq: 2
   log_to_wandb: False

@@ -6,12 +6,16 @@ from controller import *
 from planner import *
 from selector import *
 
+from minedojo.minedojo_wrapper import MineDojoEnv
 
 import os
 import json
 from datetime import datetime
 import time
 
+import torch
+import hydra
+import numpy as np
 
 from PIL import Image
 import cv2
@@ -49,7 +53,18 @@ env = MineDojoEnv(
 
 class Evaluator:
     def __init__(self, cfg, env):
-        device = torch.device("cuda", 0)
+        device = torch.device("cpu")
+
+        if torch.cuda.is_available():
+            device = torch.device("cuda", 0)
+        elif torch.backends.mps.is_available():
+            if not torch.backends.mps.is_built():
+                print(
+                    "MPS not available because the current PyTorch install was not built with MPS enabled."
+                )
+            else:
+                device = torch.device("mps")
+
         self.device = device
         self.cfg = cfg
         # super().__init__(cfg, device=device, only_base=True)
@@ -80,7 +95,7 @@ class Evaluator:
         )
         rely_goals = [val for val in self.goal_mapping_dct.values()]
         self.embedding_dict = accquire_goal_embeddings(
-            cfg["pretrains"]["clip_path"], rely_goals
+            cfg["pretrains"]["clip_path"], rely_goals, device=device
         )
 
         self.goal_model_freq = cfg["goal_model"]["freq"]

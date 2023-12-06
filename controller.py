@@ -356,7 +356,7 @@ class MineAgent:
             "[Progress] [red]Computing goal embeddings using MineClip's text encoder..."
         )
         self.embedding_dict = accquire_goal_embeddings(
-            cfg["pretrains"]["clip_path"], cfg["data"]["filters"]
+            cfg["pretrains"]["clip_path"], cfg["data"]["filters"], device=device
         )
 
         backbone = create_backbone(
@@ -393,7 +393,7 @@ class MineAgent:
         # self.iter_num = -1
 
         if cfg["model"]["load_ckpt_path"] != "":
-            state_dict = torch.load(cfg["model"]["load_ckpt_path"])
+            state_dict = torch.load(cfg["model"]["load_ckpt_path"], map_location="cpu")
             print(f"[MAIN] load checkpoint from {cfg['model']['load_ckpt_path']}. ")
             # print(f"[MAIN] iter_num: {state_dict['iter_num']}, loss: {state_dict['loss']}")
             if cfg["model"]["only_load_cnn"]:
@@ -407,7 +407,7 @@ class MineAgent:
                 )
                 self.model.load_state_dict(backbone_state_dict)
             else:
-                self.model.load_state_dict(state_dict["model_state_dict"])
+                self.model.load_state_dict(state_dict["model_state_dict"], strict=False)
                 self.iter_num = state_dict["iter_num"]
 
         self.model = self.model.to(self.device)
