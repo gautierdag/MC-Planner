@@ -31,7 +31,7 @@ class CnnBasicBlock(nn.Module):
         self.conv0 = FanInInitReLULayer(
             self.inchan,
             self.inchan,
-            kernel_size=3, 
+            kernel_size=3,
             padding=1,
             init_scale=s,
             log_scope=f"{log_scope}/conv0",

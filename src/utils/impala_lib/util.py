@@ -62,7 +62,9 @@ class FanInInitReLULayer(nn.Module):
             self.norm = nn.LayerNorm(inchan)
 
         layer = dict(conv=nn.Conv2d, conv3d=nn.Conv3d, linear=nn.Linear)[layer_type]
-        self.layer = layer(inchan, outchan, bias=self.norm is None, *layer_args, **layer_kwargs)
+        self.layer = layer(
+            inchan, outchan, bias=self.norm is None, *layer_args, **layer_kwargs
+        )
 
         # Init Weights (Fan-In)
         self.layer.weight.data *= init_scale / self.layer.weight.norm(
@@ -98,7 +100,7 @@ class ResidualRecurrentBlocks(nn.Module):
         **block_kwargs,
     ):
         super().__init__()
-        init_scale = n_block ** -0.5 if is_residual else 1
+        init_scale = n_block**-0.5 if is_residual else 1
         self.blocks = nn.ModuleList(
             [
                 ResidualRecurrentBlock(
@@ -114,7 +116,7 @@ class ResidualRecurrentBlocks(nn.Module):
 
     def forward(self, x, first, state):
         state_out = []
-        if 'lstm' in self.recurrence_type:
+        if "lstm" in self.recurrence_type:
             assert len(state) == len(
                 self.blocks
             ), f"Length of state {len(state)} did not match length of blocks {len(self.blocks)}"
@@ -126,14 +128,14 @@ class ResidualRecurrentBlocks(nn.Module):
             ), f"Length of state {len(state)} did not match length of blocks {len(self.blocks)}"
             n_state = []
             for i in range(len(self.blocks)):
-                n_state.append((state[3*i], (state[3*i+1], state[3*i+2])))
+                n_state.append((state[3 * i], (state[3 * i + 1], state[3 * i + 2])))
             state = n_state
         for block, _s_in in zip(self.blocks, state):
             x, _s_o = block(x, first, _s_in)
             state_out.append(_s_o)
 
         # FIXME: transformer only, len(state) == 3 * self.blocks
-        if 'lstm' not in self.recurrence_type:
+        if "lstm" not in self.recurrence_type:
             n_state_out = []
             for i in range(len(state_out)):
                 n_state_out.append(state_out[i][0])
@@ -180,7 +182,7 @@ class ResidualRecurrentBlock(nn.Module):
         s = init_scale
         if use_pointwise_layer:
             if is_residual:
-                s *= 2 ** -0.5  # second residual
+                s *= 2**-0.5  # second residual
             self.mlp0 = FanInInitReLULayer(
                 hidsize,
                 hidsize * pointwise_ratio,
@@ -201,8 +203,12 @@ class ResidualRecurrentBlock(nn.Module):
         self.pre_r_ln = nn.LayerNorm(hidsize)
         if recurrence_type in ["multi_layer_lstm", "multi_layer_bilstm"]:
             self.r = nn.LSTM(hidsize, hidsize, batch_first=True)
-            nn.init.normal_(self.r.weight_hh_l0, std=s * (self.r.weight_hh_l0.shape[0] ** -0.5))
-            nn.init.normal_(self.r.weight_ih_l0, std=s * (self.r.weight_ih_l0.shape[0] ** -0.5))
+            nn.init.normal_(
+                self.r.weight_hh_l0, std=s * (self.r.weight_hh_l0.shape[0] ** -0.5)
+            )
+            nn.init.normal_(
+                self.r.weight_ih_l0, std=s * (self.r.weight_ih_l0.shape[0] ** -0.5)
+            )
             self.r.bias_hh_l0.data *= 0
             self.r.bias_ih_l0.data *= 0
         elif recurrence_type == "transformer":
@@ -226,9 +232,12 @@ class ResidualRecurrentBlock(nn.Module):
             x,
             first,
             state,
-            reverse_lstm=self.recurrence_type == "multi_layer_bilstm" and (self.block_number + 1) % 2 == 0,
+            reverse_lstm=self.recurrence_type == "multi_layer_bilstm"
+            and (self.block_number + 1) % 2 == 0,
         )
-        if self.is_residual and "lstm" in self.recurrence_type:  # Transformer already residual.
+        if (
+            self.is_residual and "lstm" in self.recurrence_type
+        ):  # Transformer already residual.
             x = x + residual
         if self.use_pointwise_layer:
             # Residual MLP

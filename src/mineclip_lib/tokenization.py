@@ -6,7 +6,7 @@ from functools import lru_cache
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import torch
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer
 
 
 def get_model_full_name(model_name):

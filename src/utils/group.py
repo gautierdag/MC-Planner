@@ -5,13 +5,15 @@ from rich import print
 from ray.rllib.offline.json_reader import JsonReader
 from ray.rllib.offline.json_writer import JsonWriter
 
-'''
+"""
 split the trajectories into different folders
 in_dir: the input directory of json files
 out_dir: the output directory of json files
-'''
+"""
+
+
 # goal_list = ['log', 'dirt', 'mutton', 'chicken', 'beef', 'string', 'porkchop', 'cobblestone']
-def group_by_accomplishments(in_dir, out_dir, extract_feature = False):
+def group_by_accomplishments(in_dir, out_dir, extract_feature=False):
     statistic = {}
     reader = JsonReader(in_dir)
     path_dict = {}
@@ -21,16 +23,16 @@ def group_by_accomplishments(in_dir, out_dir, extract_feature = False):
     #     path_dict[item].mkdir(parents=True, exist_ok=True)
     #     print(f"created directory <{path_dict[item]}>. ")
     #     writer_dict[item] = JsonWriter(str(path_dict[item]))
-    
+
     epid = 0
     bar = tqdm(enumerate(reader.read_all_files()))
     for eps, samples in bar:
         for sample in samples.split_by_episode():
-            bar.set_description(f'processing samples: {eps}, episode: {epid}')
+            bar.set_description(f"processing samples: {eps}, episode: {epid}")
             epid += 1
             traj_item = None
             complete_accomplishments = []
-            for item_list in sample['accomplishments']:
+            for item_list in sample["accomplishments"]:
                 complete_accomplishments += item_list
                 # if len(item_list) > 0 and item_list[0] in goal_list:
                 #     traj_item = item_list[0]
@@ -48,20 +50,21 @@ def group_by_accomplishments(in_dir, out_dir, extract_feature = False):
                 path_dict[traj_item].mkdir(parents=True, exist_ok=True)
                 print(f"created directory <{path_dict[traj_item]}>. ")
                 writer_dict[traj_item] = JsonWriter(str(path_dict[traj_item]))
-                
+
             if traj_item is not None:
                 writer_dict[traj_item].write(sample)
-                
-    print(f'[√] FINISHED!')
-    print("="*80)
+
+    print("[√] FINISHED!")
+    print("=" * 80)
     for k, v in statistic.items():
         print(k, v)
-    print("="*80)
+    print("=" * 80)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Group the collected data by goals. ")
-    parser.add_argument('-i', '--in_dir', default='', type=str)
-    parser.add_argument('-o', '--out_dir', default='', type=str)
+    parser.add_argument("-i", "--in_dir", default="", type=str)
+    parser.add_argument("-o", "--out_dir", default="", type=str)
     args = parser.parse_args()
     print(args)
     # in_dir = '/home/caishaofei/workspace/CODE_BASE/minerl_rllib/demons/two_animals_symbol'

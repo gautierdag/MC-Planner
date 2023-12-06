@@ -9,7 +9,9 @@ from src.utils.impala_lib.tree_util import tree_map
 
 
 @functools.lru_cache()
-def get_band_diagonal_mask(t: int, T: int, maxlen: int, batchsize: int, device: th.device) -> th.Tensor:
+def get_band_diagonal_mask(
+    t: int, T: int, maxlen: int, batchsize: int, device: th.device
+) -> th.Tensor:
     """Returns a band diagonal mask which is causal (upper triangle is masked)
     and such that any frame can only view up to maxlen total past frames
     including the current frame.
@@ -44,7 +46,15 @@ def get_band_diagonal_mask(t: int, T: int, maxlen: int, batchsize: int, device: 
     return m_btT
 
 
-def get_mask(first_b11: th.Tensor, state_mask: th.Tensor, t: int, T: int, maxlen: int, heads: int, device) -> th.Tensor:
+def get_mask(
+    first_b11: th.Tensor,
+    state_mask: th.Tensor,
+    t: int,
+    T: int,
+    maxlen: int,
+    heads: int,
+    device,
+) -> th.Tensor:
     """Returns a band diagonal mask that respects masking past states (columns 0:T-t inclusive)
         if first_b11 is True. See get_band_diagonal_mask for how the base mask is computed.
         This function takes that mask and first zeros out any past context if first_b11 is True.
@@ -74,12 +84,15 @@ def get_mask(first_b11: th.Tensor, state_mask: th.Tensor, t: int, T: int, maxlen
 
     # FIXME: hacky! (see below)
     import copy
+
     prev_state_mask = copy.deepcopy(state_mask).zero_()
     state_mask = state_mask[:, :, 0].unsqueeze(1).bool()
     # if state_mask is None:
     #     state_mask = th.zeros((b, 1, T - t), dtype=bool, device=device)
 
-    m_btT = get_band_diagonal_mask(t, T, maxlen, b, device).clone()  # Should be shape B, t, T
+    m_btT = get_band_diagonal_mask(
+        t, T, maxlen, b, device
+    ).clone()  # Should be shape B, t, T
     not_first = ~first_b11.to(device=device)
     m_btT[:, :, :-t] &= not_first  # Zero out anything in the past if first is true
     m_btT[:, :, :-t] &= state_mask
@@ -168,6 +181,7 @@ class MaskedAttention(nn.Module):
 
         # FIXME: hacky! (see above)
         import copy
+
         state_mask = copy.deepcopy(state[0]).zero_()
         # Don't know why but you should never assign any non-zero value here
         # state_mask[:, :, 1] = -0.5
@@ -198,7 +212,7 @@ class MaskedAttention(nn.Module):
                     attemp += 1
 
             if attemp != 0:
-                print('Tried {} times'.format(attemp))
+                print("Tried {} times".format(attemp))
 
         # FIXME: hacky! (see above)
         state_mask = state_mask.to(xf_state[0].device)
@@ -215,4 +229,8 @@ class MaskedAttention(nn.Module):
 
     def get_log_keys(self):
         # These are logged in xf.SelfAttentionLayer
-        return [f"activation_{stat}/{self.log_scope}/{k}" for k in ["K", "Q", "V", "A", "Aproj"] for stat in ["mean", "std"]]
+        return [
+            f"activation_{stat}/{self.log_scope}/{k}"
+            for k in ["K", "Q", "V", "A", "Aproj"]
+            for stat in ["mean", "std"]
+        ]

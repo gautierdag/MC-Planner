@@ -27,12 +27,12 @@ class CnnBasicBlock(nn.Module):
     ):
         super().__init__()
         self.inchan = inchan
-        self.goal_dim = kwargs['goal_dim']
+        self.goal_dim = kwargs["goal_dim"]
         s = math.sqrt(init_scale)
         self.conv0 = FanInInitReLULayer(
             self.inchan,
             self.inchan,
-            kernel_size=3, 
+            kernel_size=3,
             padding=1,
             init_scale=s,
             log_scope=f"{log_scope}/conv0",
@@ -48,9 +48,9 @@ class CnnBasicBlock(nn.Module):
             **init_norm_kwargs,
         )
         self.goal_gate = nn.Sequential(
-            nn.Linear(self.goal_dim, self.inchan * 2), 
+            nn.Linear(self.goal_dim, self.inchan * 2),
             nn.ReLU(),
-            nn.Linear(self.inchan * 2, self.inchan), 
+            nn.Linear(self.inchan * 2, self.inchan),
         )
 
     def forward(self, x, goal_embeddings):
